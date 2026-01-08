@@ -34,7 +34,7 @@ function normalizeBasePath(value) {
     return '';
   }
 
-  const withoutSlashes = trimmed.replace(/^\\/+|\\/+$/g, '');
+  const withoutSlashes = trimmed.replace(/^\/+|\/+$/g, '');
   return `/${withoutSlashes}`;
 }
 
