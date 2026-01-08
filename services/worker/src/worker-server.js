@@ -52,9 +52,11 @@ const supabaseAdmin = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_K
   }
 });
 
+const corsOptions = buildCorsOptions(allowedOrigins);
 const app = express();
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
-app.use(cors(buildCorsOptions(allowedOrigins)));
 
 /**
  * @typedef {object} WorkerRuntime
@@ -101,15 +103,15 @@ function parseCsv(value) {
  * @throws {Error} Never throws.
  *
  * @behavior
- *  - Trim whitespace from the origin value.
- *  - Remove trailing slashes.
- *  - Preserve scheme and host casing.
+  *  - Trim whitespace from the origin value.
+  *  - Remove trailing slashes.
+  *  - Lowercase the origin for comparison.
  *
  * @context
  *  Used when matching request origins to the allowlist.
  */
 function normalizeOrigin(value) {
-  return value.trim().replace(/\/+$/g, '');
+  return value.trim().replace(/\/+$/g, '').toLowerCase();
 }
 
 /**
