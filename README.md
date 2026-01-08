@@ -26,13 +26,16 @@ Supabase Studio is available at:
 ## Render worker setup (free tier)
 1. Create a new **Web Service** on Render from `services/worker`.
 2. Set the start command to `npm start`.
-3. Add environment variables (see `services/worker/.env.example`):
+3. Set the build command to `npm install && npx playwright install --with-deps chromium`.
+4. Add environment variables (see `services/worker/.env.example`):
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `WORKER_NAMES` (ex: `lister1,scanner1,scanner2`)
    - `ALLOWED_ORIGINS` (your GitHub Pages URL + local dev URL)
    - `ALLOWED_EMAILS` (optional allowlist for control access)
    - `LOG_INTERVAL_MS` and `HEARTBEAT_INTERVAL_MS` (optional)
+   - `PLAYWRIGHT_WORKERS`, `SCANNER_TARGET_URL`, `SCAN_INTERVAL_MS`
+     (for the Playwright-backed scanner worker)
 
 Render free services sleep when idle; the first start request may take a few
 seconds to wake.
