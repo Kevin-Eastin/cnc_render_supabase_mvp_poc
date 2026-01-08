@@ -1,0 +1,112 @@
+/**
+ * @file app.css
+ * @description Global styles and Tailwind layers for the log viewer UI.
+ * @role Visual theme, typography, and animation definitions.
+ *
+ * @pseudocode
+ *  1. Import fonts and Tailwind layers.
+ *  2. Define CSS variables for the color system.
+ *  3. Apply base typography and background styling.
+ *  4. Create component utility classes.
+ *  5. Define animation keyframes and helpers.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-ink: 16 17 23;
+    --color-cream: 247 241 231;
+    --color-sand: 239 228 212;
+    --color-accent: 255 122 89;
+    --color-accent-2: 79 124 255;
+    --color-muted: 95 99 107;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    color: rgb(var(--color-ink) / 1);
+    background:
+      radial-gradient(1200px 600px at 10% 10%, rgba(255, 209, 153, 0.35), transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, rgba(79, 124, 255, 0.25), transparent 55%),
+      linear-gradient(135deg, #f7f1e7 0%, #f4e6d6 45%, #efe4d4 100%);
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-3xl border border-black/10 bg-white/70 shadow-glow backdrop-blur;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em];
+  }
+
+  .log-chip {
+    @apply inline-flex items-center rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em];
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-rise {
+    animation: rise 0.6s ease both;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+
+  .stagger > * {
+    animation: rise 0.6s ease both;
+  }
+
+  .stagger > *:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .stagger > *:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+
+  .stagger > *:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+
+  .stagger > *:nth-child(4) {
+    animation-delay: 0.2s;
+  }
+}

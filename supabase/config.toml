@@ -1,0 +1,36 @@
+# @file config.toml
+# @description Configure local Supabase services and ports for the PoC.
+# @role Supabase CLI config for local database and API services.
+# @pseudocode
+#  1. Define a local project id.
+#  2. Configure API schema exposure and query limits.
+#  3. Configure database ports and version.
+#  4. Configure Studio and email capture ports.
+#  5. Set storage file size limits.
+
+project_id = "local-log-viewer"
+
+[api]
+port = 55321
+schemas = ["public", "storage", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 55322
+shadow_port = 55320
+major_version = 15
+
+[studio]
+port = 55323
+
+[analytics]
+port = 55327
+
+[inbucket]
+port = 55324
+smtp_port = 55325
+pop3_port = 55326
+
+[storage]
+file_size_limit = "50MiB"

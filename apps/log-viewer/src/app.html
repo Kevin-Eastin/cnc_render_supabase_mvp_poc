@@ -1,0 +1,23 @@
+<!--
+@file app.html
+@description Base HTML shell for the SvelteKit log viewer.
+@role Root document template for SvelteKit rendering.
+
+@pseudocode
+ 1. Define the HTML doctype and language.
+ 2. Provide metadata and viewport settings.
+ 3. Inject SvelteKit head content.
+ 4. Mount the SvelteKit body output.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%sveltekit.assets%/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    %sveltekit.head%
+  </head>
+  <body data-sveltekit-preload-data="hover">
+    <div style="display: contents">%sveltekit.body%</div>
+  </body>
+</html>
