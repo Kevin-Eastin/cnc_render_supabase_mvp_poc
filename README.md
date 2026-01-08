@@ -35,7 +35,7 @@ Supabase Studio is available at:
    - `ALLOWED_EMAILS` (optional allowlist for control access)
    - `LOG_INTERVAL_MS` and `HEARTBEAT_INTERVAL_MS` (optional)
    - `PLAYWRIGHT_WORKERS`, `SCANNER_TARGET_URL`, `SCAN_INTERVAL_MS`
-     (for the Playwright-backed scanner worker)
+     (for the Playwright-backed scanner worker, ex: `https://books.toscrape.com/`)
    - `PLAYWRIGHT_BROWSERS_PATH=0` (store browsers inside the deploy artifact)
 
 Render free services sleep when idle; the first start request may take a few

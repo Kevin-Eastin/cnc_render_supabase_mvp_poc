@@ -47,7 +47,7 @@ const allowedWorkers = new Set(workerNames);
 const allowedEmails = parseCsv(env.ALLOWED_EMAILS).map((email) => email.toLowerCase());
 const allowedOrigins = parseCsv(env.ALLOWED_ORIGINS).map(normalizeOrigin);
 const playwrightWorkers = new Set(parseCsv(env.PLAYWRIGHT_WORKERS ?? 'scanner1'));
-const scannerTargetUrl = env.SCANNER_TARGET_URL ?? 'https://www.amazon.com/s?k=deals';
+const scannerTargetUrl = env.SCANNER_TARGET_URL ?? 'https://books.toscrape.com/';
 const scanIntervalMs = parseNumber(env.SCAN_INTERVAL_MS, 60000);
 const scanItemLimit = parseNumber(env.SCAN_ITEM_LIMIT, 10);
 const playwrightHeadless = parseBoolean(env.PLAYWRIGHT_HEADLESS, true);
@@ -601,7 +601,7 @@ async function upsertWorkerStatus(payload) {
  *  - Return null when parsing fails.
  *
  * @context
- *  Used to normalize Amazon price text for logs.
+ *  Used to normalize catalog price text for logs.
  */
 function parsePriceValue(priceText) {
   if (!priceText) {
@@ -633,7 +633,7 @@ function parsePriceValue(priceText) {
  *  - Return null if URL parsing fails.
  *
  * @context
- *  Used when normalizing Amazon search result links.
+ *  Used when normalizing catalog result links.
  */
 function resolveUrl(href, baseUrl) {
   if (!href) {
@@ -754,7 +754,7 @@ async function ensureBrowser(runtime) {
  *  - Return true when a click succeeds.
  *
  * @context
- *  Used to dismiss Amazon consent overlays before scanning.
+ *  Used to dismiss consent overlays before scanning.
  */
 async function maybeAcceptConsent(page) {
   const selectors = [
@@ -783,24 +783,24 @@ async function maybeAcceptConsent(page) {
 }
 
 /**
- * @function extractAmazonItems
- * @description Extract item details from Amazon search results.
+ * @function extractCatalogItems
+ * @description Extract item details from a simple catalog page.
  * @param {import('playwright').Page} page - Playwright page instance.
  * @param {number} limit - Maximum number of items to return.
  * @returns {Promise<object[]>} Array of item metadata objects.
  * @throws {Error} If page evaluation fails.
  *
  * @behavior
- *  - Query Amazon result cards for title, link, and price.
+ *  - Query product cards for title, link, and price.
  *  - Limit the result count to the configured max.
  *  - Normalize URLs and numeric price values.
  *
  * @context
- *  Used by the Playwright scan loop for Amazon targets.
+ *  Used by the Playwright scan loop for simple catalog targets.
  */
-async function extractAmazonItems(page, limit) {
+async function extractCatalogItems(page, limit) {
   const rawItems = await page.$$eval(
-    '[data-component-type="s-search-result"]',
+    '.product_pod',
     (nodes, maxItems) => {
       const items = [];
 
@@ -809,9 +809,12 @@ async function extractAmazonItems(page, limit) {
           break;
         }
 
-        const title = node.querySelector('h2 a span')?.textContent?.trim() ?? '';
-        const href = node.querySelector('h2 a')?.getAttribute('href') ?? '';
-        const priceText = node.querySelector('.a-price .a-offscreen')?.textContent?.trim() ?? '';
+        const title =
+          node.querySelector('h3 a')?.getAttribute('title')?.trim() ??
+          node.querySelector('h3 a')?.textContent?.trim() ??
+          '';
+        const href = node.querySelector('h3 a')?.getAttribute('href') ?? '';
+        const priceText = node.querySelector('.price_color')?.textContent?.trim() ?? '';
 
         if (!title) {
           continue;
@@ -841,21 +844,21 @@ async function extractAmazonItems(page, limit) {
 
 /**
  * @function clickFirstItem
- * @description Click the first Amazon search result item.
+ * @description Click the first catalog item.
  * @param {import('playwright').Page} page - Playwright page instance.
  * @returns {Promise<object | null>} Click metadata or null when unavailable.
  * @throws {Error} Never throws.
  *
  * @behavior
- *  - Locate the first search result link.
+ *  - Locate the first product link.
  *  - Click and wait for navigation signals.
  *  - Return click metadata for logging.
  *
  * @context
- *  Used to generate click activity during scans.
+ *  Used to generate click activity during catalog scans.
  */
 async function clickFirstItem(page) {
-  const link = page.locator('[data-component-type="s-search-result"] h2 a').first();
+  const link = page.locator('.product_pod h3 a').first();
   const count = await link.count();
 
   if (count === 0) {
@@ -930,7 +933,18 @@ async function runPlaywrightScan(runtime) {
 
     await maybeAcceptConsent(page);
 
-    const items = await extractAmazonItems(page, scanItemLimit);
+    let resultsReady = false;
+
+    try {
+      await page.waitForSelector('.product_pod', { timeout: 10000 });
+      resultsReady = true;
+    } catch (error) {
+      resultsReady = false;
+    }
+
+    const pageTitle = await page.title().catch(() => '');
+    const pageUrl = page.url();
+    const items = resultsReady ? await extractCatalogItems(page, scanItemLimit) : [];
     const clickResult = await clickFirstItem(page);
     const now = new Date().toISOString();
 
@@ -940,6 +954,9 @@ async function runPlaywrightScan(runtime) {
         scanIndex,
         target: scannerTargetUrl,
         itemCount: items.length,
+        pageTitle,
+        pageUrl,
+        resultsReady,
         items
       })
     ];
