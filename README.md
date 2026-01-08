@@ -26,7 +26,7 @@ Supabase Studio is available at:
 ## Render worker setup (free tier)
 1. Create a new **Web Service** on Render from `services/worker`.
 2. Set the start command to `npm start`.
-3. Set the build command to `npm install && npx playwright install --with-deps chromium`.
+3. Set the build command to `npm install` (Playwright downloads Chromium on postinstall).
 4. Add environment variables (see `services/worker/.env.example`):
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
