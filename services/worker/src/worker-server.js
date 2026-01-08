@@ -16,7 +16,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import { createClient } from '@supabase/supabase-js';
-import { chromium } from 'playwright';
 import { z } from 'zod';
 
 dotenv.config();
@@ -87,6 +86,7 @@ app.use(express.json({ limit: '1mb' }));
 
 const workerRegistry = new Map();
 const logLevels = ['info', 'warning', 'error'];
+let chromiumLauncher = null;
 
 /**
  * @function parseCsv
@@ -187,6 +187,35 @@ function parseBoolean(value, fallback) {
   }
 
   return fallback;
+}
+
+/**
+ * @function getChromiumLauncher
+ * @description Resolve the Playwright Chromium launcher for runtime use.
+ * @param {None} _ - No parameters.
+ * @returns {Promise<import('playwright').BrowserType>} Chromium launcher instance.
+ * @throws {Error} If Playwright cannot be imported.
+ *
+ * @behavior
+ *  - Default PLAYWRIGHT_BROWSERS_PATH to local installs.
+ *  - Dynamically import Playwright on first use.
+ *  - Cache the Chromium launcher for reuse.
+ *
+ * @context
+ *  Used by the Playwright scan loop to launch browsers.
+ */
+async function getChromiumLauncher() {
+  if (chromiumLauncher) {
+    return chromiumLauncher;
+  }
+
+  if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+    process.env.PLAYWRIGHT_BROWSERS_PATH = '0';
+  }
+
+  const playwright = await import('playwright');
+  chromiumLauncher = playwright.chromium;
+  return chromiumLauncher;
 }
 
 /**
@@ -706,6 +735,7 @@ async function ensureBrowser(runtime) {
 
   await closeWorkerBrowser(runtime);
 
+  const chromium = await getChromiumLauncher();
   const browser = await chromium.launch({ headless: playwrightHeadless });
   runtime.activeBrowser = browser;
   return browser;

@@ -36,6 +36,7 @@ Supabase Studio is available at:
    - `LOG_INTERVAL_MS` and `HEARTBEAT_INTERVAL_MS` (optional)
    - `PLAYWRIGHT_WORKERS`, `SCANNER_TARGET_URL`, `SCAN_INTERVAL_MS`
      (for the Playwright-backed scanner worker)
+   - `PLAYWRIGHT_BROWSERS_PATH=0` (store browsers inside the deploy artifact)
 
 Render free services sleep when idle; the first start request may take a few
 seconds to wake.
