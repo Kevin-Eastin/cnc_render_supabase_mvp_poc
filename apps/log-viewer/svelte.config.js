@@ -40,12 +40,12 @@ function normalizeBasePath(value) {
 
 const basePath = normalizeBasePath(process.env.BASE_PATH);
 
-const paths = basePath ? { base: basePath, assets: basePath } : { base: basePath };
-
 const config = {
   kit: {
     adapter: adapter({ fallback: '200.html' }),
-    paths
+    paths: {
+      base: basePath
+    }
   }
 };
 
