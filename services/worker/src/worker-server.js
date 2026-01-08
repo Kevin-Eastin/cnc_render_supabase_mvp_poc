@@ -40,7 +40,7 @@ if (workerNames.length === 0) {
 
 const allowedWorkers = new Set(workerNames);
 const allowedEmails = parseCsv(env.ALLOWED_EMAILS).map((email) => email.toLowerCase());
-const allowedOrigins = parseCsv(env.ALLOWED_ORIGINS);
+const allowedOrigins = parseCsv(env.ALLOWED_ORIGINS).map(normalizeOrigin);
 const logIntervalMs = parseNumber(env.LOG_INTERVAL_MS, 6000);
 const heartbeatIntervalMs = parseNumber(env.HEARTBEAT_INTERVAL_MS, 12000);
 const port = parseNumber(env.PORT, 3333);
@@ -94,6 +94,25 @@ function parseCsv(value) {
 }
 
 /**
+ * @function normalizeOrigin
+ * @description Normalize origin strings for CORS comparisons.
+ * @param {string} value - Origin value to normalize.
+ * @returns {string} Normalized origin string.
+ * @throws {Error} Never throws.
+ *
+ * @behavior
+ *  - Trim whitespace from the origin value.
+ *  - Remove trailing slashes.
+ *  - Preserve scheme and host casing.
+ *
+ * @context
+ *  Used when matching request origins to the allowlist.
+ */
+function normalizeOrigin(value) {
+  return value.trim().replace(/\/+$/g, '');
+}
+
+/**
  * @function parseNumber
  * @description Parse numeric environment values with defaults.
  * @param {string | undefined} value - Raw numeric string.
@@ -129,6 +148,7 @@ function parseNumber(value, fallback) {
  * @behavior
  *  - Allow requests without an Origin header.
  *  - Permit all origins when no list is provided.
+ *  - Normalize origins before comparing.
  *  - Validate origins against the configured list.
  *
  * @context
@@ -141,13 +161,22 @@ function buildCorsOptions(origins) {
 
   return {
     origin: (origin, callback) => {
-      if (!origin || origins.includes(origin)) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const normalizedOrigin = normalizeOrigin(origin);
+
+      if (origins.includes(normalizedOrigin)) {
         callback(null, true);
         return;
       }
 
       callback(new Error('Origin not allowed'));
     },
+    allowedHeaders: ['authorization', 'content-type'],
+    methods: ['GET', 'POST', 'OPTIONS'],
     credentials: true
   };
 }
